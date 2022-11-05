@@ -4,7 +4,6 @@
 COMPT=1 # Number of printed values
 
 while true; do
-
 curl -s https://cryptorank.io/price/bitcoin > cryptorank.txt # Scrapping Bitcoin Price
 
 PRICE=$(cat cryptorank.txt | grep -oP '<div class="table-cell-with-update__CurrencyWrapper-sc-crypsw-0 iJwtNA">\$ \w+,\w+<' | grep -oP '\w+,\w+')
