@@ -30,13 +30,13 @@ min=1000000
 max=0
 
 for n in "${VALUES[@]}" ; do
-if  ((n > max)); then # Keeping the max
-    max=$n
-fi
-if  ((min > n)); then # Keeping the min
-    min=$n
-fi
-TOTAL=$(($TOTAL + $n)) # Summing the total
+    if  ((n > max)); then # Keeping the max
+        max=$n
+    fi
+    if  ((min > n)); then # Keeping the min
+        min=$n
+    fi
+    TOTAL=$(($TOTAL + $n)) # Summing the total
 done
 
 VOLATILITY=$(($max-$min)) # Calculaing the volatilitty
@@ -69,8 +69,7 @@ your_chat_id="YOUR_CHAT_ID"
 your_telegram_token="YOUR_TELEGRAM_TOKEN"
 
 if (( $(($COMPT % $HOUR)) == 0 )); then # 60 min = 1 hour
-    curl --data  chat_id=$your_chat_id --data-urlencode "text= Bitcoin's price now  : \$${PRICE} !" "https://api.telegram.org/bot$your_telegram_to
-ken/sendMessage?parse_mode=HTML" # Sending a Telegram message with current Bitcoin Price, its Max, Min and Mean of the last 24 hours 
+    curl --data  chat_id=$your_chat_id --data-urlencode "text= Bitcoin's price now  : \$${PRICE} !" "https://api.telegram.org/bot$your_telegram_token/sendMessage?parse_mode=HTML" # Sending a Telegram message with current Bitcoin Price, its Max, Min and Mean of the last 24 hours 
     echo "" # Printing nothing so next print will be on a new line
 fi
 
