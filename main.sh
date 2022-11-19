@@ -1,8 +1,8 @@
 #!/bin/bash
 
-DAY=20 # Time between every daily report (in minute here)
-HOUR=4 # Time between every message with the price (in minute here)
-PAUSE=6 # Time between every scrapping
+DAY=1440 # Time between every daily report (in minute here)
+HOUR=60 # Time between every message with the price (in minute here)
+PAUSE=60 # Time between every scrapping
 COMPT=0 # Number of printed values
 declare -a VALUES # Array that will stack prices of Bitcoin 
 
