@@ -1,10 +1,16 @@
 #!/bin/bash
 
-DAY=1440 # Time between every daily report (in minutes here)
-HOUR=60 # Time between every message with the price (in minutes here)
-PAUSE=60 # Time between every scrapping (in second here) = 60sec => 1min
+DAY=20 # Time between every daily report (in minute here)
+HOUR=4 # Time between every message with the price (in minute here)
+PAUSE=6 # Time between every scrapping
 COMPT=0 # Number of printed values
-declare -a VALUES # Array that will stack prices of Bitcoin
+declare -a VALUES # Array that will stack prices of Bitcoin 
+
+# The next 3 lines initilalize values
+TOTAL=0
+min=1000000
+max=0
+
 while true; do
 
 curl -s https://cryptorank.io/price/bitcoin > cryptorank.txt # Scrapping Bitcoin Price
@@ -21,36 +27,33 @@ COMPT=$(( $COMPT + 1 )) # Incrementation of COMPT
 sleep $PAUSE # Gives us the price every minute
 
 VALUES[$(($COMPT))]=$PRICE # Keep every value that will be necessary for total, mean, max and min
-#echo ${VALUES[*]}
 
-# The next 4 lines initilalize values
-TOTAL=0
-MEAN=0
-min=1000000
-max=0
-
-for n in "${VALUES[@]}" ; do
-    if  ((n > max)); then # Keeping the max
-        max=$n
-    fi
-    if  ((min > n)); then # Keeping the min
-        min=$n
-    fi
-    TOTAL=$(($TOTAL + $n)) # Summing the total
-done
-
-VOLATILITY=$(($max-$min)) # Calculaing the volatilitty
-
-MEAN=$(($TOTAL / ($COMPT))) # Calculating the mean
 
 if (($COMPT==1)); then
     OPEN_PRICE=$PRICE # Taking the first price for the Open Price
 fi
+
 if (($COMPT==$DAY)); then
+
+    for n in "${VALUES[@]}" ; do
+        if  ((n > max)); then # Keeping the max
+            max=$n
+        fi
+        if  ((min > n)); then # Keeping the min
+            min=$n
+        fi
+        TOTAL=$(($TOTAL + $n)) # Summing the total
+    done
     CLOSE_PRICE=$PRICE # Taking the last price for he Close Price
+    DAILY_GAP=$(printf %.2f "$((10**3*($CLOSE_PRICE - $OPEN_PRICE)*100/$OPEN_PRICE))e-3")
+    MAX_GAP=$(($max-$min)) # Calculaing the maximum gap between the last 24h prices
+    MEAN=$(($TOTAL / ($COMPT))) # Calculating the mean
+
 fi
 
-# You can unmute the next 14 lines if you want the values at every print
+# You can unmute the next 16 lines if you want the values at every print
+#echo "VALUES"
+#echo ${VALUES[*]}
 #echo "MAX"
 #echo $max
 #echo "MIN"
@@ -64,28 +67,36 @@ fi
 #echo "Close Price"
 #echo $CLOSE_PRICE
 #echo "Volatility :"
+#echo $VOLATILITY
 
 your_chat_id="YOUR_CHAT_ID"
 your_telegram_token="YOUR_TELEGRAM_TOKEN"
 
 if (( $(($COMPT % $HOUR)) == 0 )); then # 60 min = 1 hour
-    curl --data  chat_id=$your_chat_id --data-urlencode "text= Bitcoin's price now  : \$${PRICE} !" "https://api.telegram.org/bot$your_telegram_token/sendMessage?parse_mode=HTML" # Sending a Telegram message with current Bitcoin Price, its Max, Min and Mean of the last 24 hours 
-    echo "" # Printing nothing so next print will be on a new line
+curl --data  chat_id=$your_chat_id --data-urlencode "text= Bitcoin's price now  : \$${PRICE} !" "https://api.telegram.org/bot$your_telegram_to
+ken/sendMessage?parse_mode=HTML" # Sending a Telegram message with current Bitcoin Price, its Max, Min and Mean of the last 24 hours 
+echo "" # Printing nothing so next print will be on a new line
 fi
 
 if (( $COMPT == $DAY )); then # 1440 min = 1 day 
-    curl --data  chat_id=$your_chat_id --data-urlencode "text= Bitcoin's price now  : \$${PRICE} 
-Mean in the last 24h : ${MEAN}
+curl --data  chat_id=$your_chat_id --data-urlencode "text= Bitcoin's price now  : \$${PRICE} 
+Mean in the last 24h :\$${MEAN}
 Open Price : \$${OPEN_PRICE}
 Close Price : \$${CLOSE_PRICE}
 Lower price : \$${min}
 Higher price : \$${max}
-Volatility : \$${VOLATILITY}" "https://api.telegram.org/bot$your_telegram_token/sendMessage?parse_mode=HTML" # Sending a Telegram message with current
-    Bitcoin Price, its Max, Min and Mean of the last 24 hours 
-    echo "" # Printing nothing so next print will be on a new line
-    COMPT=0 # Restart for next day
-    unset VALUES # Restart for next day
-    declare -a VALUES # Restart for next day
+Maximum gap : \$${MAX_GAP}
+Evolution in the last 24h : ${DAILY_GAP}% " "https://api.telegram.org/bot$your_telegram_token/sendMessage?parse_mode=HTML" # Sending a Telegram messag
+e with current Bitcoin Price, its Max, Min and Mean of the last 24 hours 
+echo "" # Printing nothing so next print will be on a new line
+COMPT=0 # Restart for next day
+unset VALUES # Restart for next day
+declare -a VALUES # Restart for next day
+
+# The next 3 lines reinitilalize values
+TOTAL=0
+min=1000000
+max=0
 fi
 
 done
